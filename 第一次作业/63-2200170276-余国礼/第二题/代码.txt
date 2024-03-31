@@ -1,0 +1,67 @@
+from sklearn.metrics import precision_recall_curve, roc_curve, auc
+import matplotlib.pyplot as plt
+
+
+def plot_pr_roc_curve(T, P, label):
+    precision, recall, _ = precision_recall_curve(T, P)
+    fpr, tpr, _ = roc_curve(T, P)
+
+    # 绘制 P-R 曲线
+    plt.figure()
+    plt.step(recall, precision, where='post', color='b', label='Precision-Recall curve')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.title('Precision-Recall curve for {}'.format(label))
+    plt.legend(loc="lower left")
+    plt.show()
+
+    # 计算 AUC 值
+    pr_auc = auc(recall, precision)
+
+    # 绘制 ROC 曲线
+    plt.figure()
+    plt.plot(fpr, tpr, color='r', label='ROC curve')
+    plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC curve for {}'.format(label))
+    plt.legend(loc="lower right")
+    plt.show()
+
+    # 计算 AUC 值
+    roc_auc = auc(fpr, tpr)
+
+    return pr_auc, roc_auc
+
+
+# 定义数据
+T1 = [0, 0, 1, 0, 1, 0, 0, 0, 0, 0]
+P1 = [0.1, 0.1, 0.5, 0.1, 0.4, 0.6, 0.4, 0.4, 0.1, 0.1]
+
+T2 = [0, 1, 0, 0, 0, 1, 1, 1, 0, 1]
+P2 = [0.2, 0.6, 0.2, 0.1, 0.2, 0.3, 0.2, 0.1, 0.1, 0.8]
+
+T3 = [1, 0, 0, 1, 0, 0, 0, 0, 1, 0]
+P3 = [0.7, 0.3, 0.3, 0.8, 0.4, 0.1, 0.4, 0.5, 0.8, 0.1]
+
+T4 = T1 + T2 + T3
+P4 = P1 + P2 + P3
+
+# 计算并绘制 P-R 曲线、ROC 曲线，并计算 AUC 值
+pr_auc_1, roc_auc_1 = plot_pr_roc_curve(T1, P1, 'T1')
+pr_auc_2, roc_auc_2 = plot_pr_roc_curve(T2, P2, 'T2')
+pr_auc_3, roc_auc_3 = plot_pr_roc_curve(T3, P3, 'T3')
+pr_auc_4, roc_auc_4 = plot_pr_roc_curve(T4, P4, 'T4')
+
+print("AUC for T1: ROC = {:.2f}".format(roc_auc_1))
+print("AUC for T2: ROC = {:.2f}".format(roc_auc_2))
+print("AUC for T3: ROC = {:.2f}".format(roc_auc_3))
+print("AUC for T4: ROC= {:.2f}".format(roc_auc_4))
+
+
+答案：AUC for T1: ROC = 0.81
+AUC for T2: ROC = 0.78
+AUC for T3: ROC = 1.00
+AUC for T4: ROC= 0.81
