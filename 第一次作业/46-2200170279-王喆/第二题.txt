@@ -1,0 +1,33 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+
+Y_true=np.array([[0,0,1],[0,1,0],[1,0,0],[0,0,1],[1,0,0],[0,1,0],[0,1,0],[0,1,0],[0,0,1],[0,1,0]])
+Y_score=np.array([[0.1,0.2,0.7],[0.1,0.6,0.3],[0.5,0.2,0.3],[0.1,0.1,0.8],[0.4,0.2,0.4],[0.6,0.3,0.1],[0.4,0.2,0.4],[0.4,0.1,0.5],[0.1,0.1,0.8],[0.1,0.8,0.1]])
+
+# 计算每个类别的ROC曲线的相关指标
+fpr1, tpr1, thresholds1 = roc_curve(Y_true[:, 0], Y_score[:, 0])
+fpr2, tpr2, thresholds2 = roc_curve(Y_true[:, 1], Y_score[:, 1])
+fpr3, tpr3, thresholds3 = roc_curve(Y_true[:, 2], Y_score[:, 2])
+fpr_grid=np.linspace(0.0,1.0,100)
+tpr_interp1 = np.interp(fpr_grid, fpr1, tpr1)
+tpr_interp2 = np.interp(fpr_grid, fpr2, tpr2)
+tpr_interp3 = np.interp(fpr_grid, fpr3, tpr3)
+mean_tpr = (tpr_interp1 + tpr_interp2 + tpr_interp3) / 3
+
+mean_auc=(auc(fpr1, tpr1)+auc(fpr2, tpr2)+auc(fpr3, tpr3))/3
+
+# 绘制ROC曲线
+plt.figure()
+lw = 2
+plt.plot(fpr1, tpr1, color='darkorange', lw=lw, label='Class 1 (area = %0.2f)' % auc(fpr1, tpr1))
+plt.plot(fpr2, tpr2, color='b', lw=lw, label='Class 2 (area = %0.2f)' % auc(fpr2, tpr2))
+plt.plot(fpr3, tpr3, color='r', lw=lw, label='Class 3 (area = %0.2f)' % auc(fpr3, tpr3))
+plt.plot(fpr_grid, mean_tpr, color='y', lw=lw, label='Average ROC')
+plt.xlim([-0.05, 1.0])
+plt.ylim([0.0, 1.05])#防止出现1不显示
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.title('Receiver operating characteristic example')
+plt.legend(loc="lower right")
+plt.show()
