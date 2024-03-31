@@ -1,65 +1,43 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 31 14:52:01 2024
-
-@author: Administrator
-"""
-
+import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
 
-data = [['T', 0.9], ['N', 0.4], ['N', 0.2], ['T', 0.6], ['N', 0.5], ['N', 0.4], ['T', 0.7], ['T', 0.4], ['N', 0.65], ['N', 0.35]]
-data.sort(key=lambda x: x[1], reverse=True)
+y_true = np.asarray([[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 0, 1], [1, 0, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 0, 1], [0, 1, 0]])
+y_pred = np.asarray([[0.1, 0.2, 0.7], [0.1, 0.6, 0.3], [0.5, 0.2, 0.3], [0.1, 0.1, 0.8], [0.4, 0.2, 0.4], [0.6, 0.3, 0.1], [0.4, 0.2, 0.4], [0.4, 0.1, 0.5], [0.1, 0.1, 0.8], [0.1, 0.8, 0.1]])
 
-thresholds = sorted(set([d[1] for d in data]), reverse=True)
-recall = []
-precision = []
-TPR = []
-FPR = []
-auc = 0
+n_classes = len(y_true[0])
 
+# Compute ROC curve and ROC area for each class
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
 
-for threshold in thresholds:
-    tp, fn, fp, tn = 0, 0, 0, 0
-    
-    for d in data:
-        if d[0] == 'T' and d[1] >= threshold:
-            tp += 1
-        elif d[0] == 'T' and d[1] < threshold:
-            fn += 1
-        elif d[0] == 'N' and d[1] >= threshold:
-            fp += 1
-        elif d[0] == 'N' and d[1] < threshold:
-            tn += 1
-    
-    r = tp / (tp + fn) if tp + fn != 0 else 0
-    p = tp / (tp + fp) if tp + fp != 0 else 0
-    tpr = tp / (tp + fn)
-    fpr = fp / (tn + fp) if tn + fp != 0 else 0
-    
-    recall.append(r)
-    precision.append(p)
-    TPR.append(tpr)
-    FPR.append(fpr)
+plt.figure(figsize=(8, 6))
 
-    if len(FPR) > 1:
-        auc += (FPR[-2] - FPR[-1]) * (TPR[-1] + TPR[-2])
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+    plt.plot(fpr[i], tpr[i], lw=2, label='ROC curve (class %d) AUC = %.2f' % (i, roc_auc[i]))
 
-# 绘制ROC曲线
-plt.figure(figsize=(10, 5))
-plt.subplot(1, 2, 1)
-plt.title('ROC curve', fontsize=14)
-plt.plot(FPR, TPR, marker='o')
-plt.ylabel('TPR', fontsize=16)
-plt.xlabel('FPR', fontsize=16)
+#plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve for Multiple Classes')
+plt.legend(loc="lower right")
 
-# 绘制Precision-Recall曲线
-plt.subplot(1, 2, 2)
-plt.title('Precision-Recall curve', fontsize=14)
-plt.plot(recall, precision, marker='o')
-plt.ylabel('Precision', fontsize=16)
-plt.xlabel('Recall', fontsize=16)
+# Compute macro-average ROC curve and ROC area
+fpr_grid = np.linspace(0.0, 1.0, 100)  # Given all the possible FPRs, ranging from 0 to 1, defining x-axis
+# Interpolate all ROC curves at these points
+mean_tpr = np.zeros_like(fpr_grid)  # Have the same dimension with fprs
+for i in range(n_classes):
+    mean_tpr += np.interp(fpr_grid, fpr[i], tpr[i])  # Get the corresponding TPRs with linear interpolations
+# Average it and compute AUC
+mean_tpr /= n_classes
+fpr["macro"] = fpr_grid
+tpr["macro"] = mean_tpr
+roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
 
-# 打印AUC值
-print('AUC=%.2f' % (auc / 2))
+plt.plot(fpr["macro"], tpr["macro"], lw=2, linestyle='-', label='Macro-average ROC curve (AUC = %.2f)' % roc_auc["macro"])
 
+plt.legend(loc="lower right")  # Add legend for the macro-average ROC curve
 plt.show()
