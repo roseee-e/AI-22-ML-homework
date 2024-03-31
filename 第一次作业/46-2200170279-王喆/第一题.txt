@@ -1,0 +1,65 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+Y_true = [1, 0, 0, 1, 0, 0, 1, 1, 0, 0]
+Y_score = [0.9, 0.4, 0.2, 0.6, 0.5, 0.4, 0.7, 0.4, 0.65, 0.35]
+pp = [[1, 0.9], [0, 0.4], [0, 0.2], [1, 0.6], [0, 0.5], [0, 0.4], [1, 0.7], [1, 0.4], [0, 0.65], [0, 0.35]]
+
+thresholds = sorted(set(Y_score), reverse=True)  # 获取所有不同的阈值并按降序排列
+recall = []
+precision = []
+TPR = []
+FPR = []
+
+for a in thresholds:
+    tp = 0
+    fn = 0
+    fp = 0
+    tn = 0
+    for p in pp:
+        if p[0] == 1 and p[1] >= a:
+            tp += 1
+        elif p[0] == 1 and p[1] < a:
+            fn += 1
+        elif p[0] == 0 and p[1] >= a:
+            fp += 1
+        elif p[0] == 0 and p[1] < a:
+            tn += 1
+    recall_value = tp / (tp + fn) if (tp + fn) > 0 else 0
+    precision_value = tp / (tp + fp) if (tp + fp) > 0 else 0
+    fpr_value = fp / (fp + tn) if (fp + tn) > 0 else 0
+
+    recall.append(recall_value)
+    precision.append(precision_value)
+    TPR.append(recall_value)
+    FPR.append(fpr_value)
+
+plt.figure(figsize=(5, 5))
+plt.title('Precision-Recall Curve', fontsize=16)
+plt.plot(recall, precision)
+plt.plot(recall,precision,'ro')
+plt.xlabel('Recall', fontsize=16)
+plt.ylabel('Precision', fontsize=16)
+plt.show()
+
+#2
+fpr, tpr, thresholds = roc_curve(Y_true, Y_score)
+
+# 计算AUC值
+roc_auc = auc(fpr, tpr)
+
+# 绘制ROC曲线
+plt.figure()
+lw = 2
+plt.plot(fpr, tpr, color='darkorange', lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])#防止出现1不显示
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.title('Receiver operating characteristic example')
+plt.legend(loc="lower right")
+plt.show()
+
+# 输出AUC值
+print('AUC value:', roc_auc)
