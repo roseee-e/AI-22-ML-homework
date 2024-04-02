@@ -1,0 +1,49 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+
+# 实验数据
+Y_true = np.array([[0, 0, 1],
+                    [0, 1, 0],
+                    [1, 0, 0],
+                    [0, 0, 1],
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 1, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [0, 1, 0]])
+
+Y_score = np.array([[0.1, 0.2, 0.7],
+                    [0.1, 0.6, 0.3],
+                    [0.5, 0.2, 0.3],
+                    [0.1, 0.1, 0.8],
+                    [0.4, 0.2, 0.4],
+                    [0.6, 0.3, 0.1],
+                    [0.4, 0.2, 0.4],
+                    [0.4, 0.1, 0.5],
+                    [0.1, 0.1, 0.8],
+                    [0.1, 0.8, 0.1]])
+
+# 计算每个类别的ROC曲线和AUC值
+plt.figure(figsize=(8, 6))
+for i in range(Y_true.shape[1]):
+    fpr, tpr, _ = roc_curve(Y_true[:, i], Y_score[:, i])
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, lw=2, label='ROC curve (class {}) (area = {:0.2f})'.format(i, roc_auc))
+
+# 计算平均ROC曲线和AUC值
+fpr_micro, tpr_micro, _ = roc_curve(Y_true.ravel(), Y_score.ravel())
+roc_auc_micro = auc(fpr_micro, tpr_micro)
+
+plt.plot(fpr_micro, tpr_micro, color='deeppink', linestyle=':', linewidth=4, label='micro-average ROC curve (area = {:0.2f})'.format(roc_auc_micro))
+
+# 绘制ROC曲线图
+plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve for Each Class')
+plt.legend(loc="lower right")
+plt.show()
