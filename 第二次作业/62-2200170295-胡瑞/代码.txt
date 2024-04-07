@@ -1,0 +1,81 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def gradient_descent(X, y, learning_rate, iterations):
+    m = len(y)
+    n = X.shape[1]
+    theta = np.zeros((n, 1))
+    loss_history = []
+
+    for i in range(iterations):
+        error = np.dot(X, theta) - y
+        gradient = np.dot(X.T, error) / m
+        theta -= learning_rate * gradient
+        loss = np.sum(error ** 2) / (2 * m)
+        loss_history.append(loss)
+
+    return theta, loss_history
+
+def gradient_descent_with_regularization(X, y, learning_rate, iterations, alpha):
+    m = len(y)
+    n = X.shape[1]
+    theta = np.zeros((n, 1))
+    loss_history = []
+
+    for i in range(iterations):
+        error = np.dot(X, theta) - y
+        gradient = (np.dot(X.T, error) + alpha * theta) / m
+        theta -= learning_rate * gradient
+        loss = (np.sum(error ** 2) + alpha * np.sum(theta[1:] ** 2)) / (2 * m)
+        loss_history.append(loss)
+
+    return theta, loss_history
+
+def normalize(X):
+    mu = np.mean(X, axis=0)
+    sigma = np.std(X, axis=0)
+    X_norm = (X - mu) / sigma
+    return X_norm, mu, sigma
+
+# 添加偏置项.
+path = r"C:\Users\huihui\PycharmProjects\pythonProject1\regress_data1.csv"
+import pandas as pd
+data = pd.read_csv(path)
+data['bias'] = 1
+X = data.values[:, :-1]
+y = data.values[:, -1].reshape(-1, 1)
+
+learning_rate = 0.01
+iterations = 1500
+alpha = 0.1  # 正则化参数
+
+# 使用梯度下降法进行线性回归
+theta, loss_history = gradient_descent(X, y, learning_rate, iterations)
+
+# 使用带正则化的梯度下降法进行线性回归
+theta_reg, loss_history_reg = gradient_descent_with_regularization(X, y, learning_rate, iterations, alpha)
+
+# 归一化特征矩阵
+X_norm, mu, sigma = normalize(X[:, :-1])  # 除去偏置项进行归一化
+X_norm = np.hstack((X_norm, np.ones((X_norm.shape[0], 1))))  # 添加偏置项
+
+# 使用归一化的数据进行梯度下降法进行线性回归
+theta_norm, _ = gradient_descent(X_norm, y, learning_rate, iterations)
+
+# 绘制训练损失曲线
+plt.plot(range(iterations), loss_history, label='Gradient Descent')
+plt.plot(range(iterations), loss_history_reg, label='Gradient Descent with Regularization')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.title('Training Loss')
+
+# 绘制最小二乘法得到的回归曲线
+
+plt.figure()
+X_b = np.c_[np.ones((len(X), 1)), X]  # 添加偏置项
+theta_least_squares = np.linalg.inv(X_b.T.dot(X_b)).dot(X_b.T).dot(y)
+
+plt.plot(X[:, 0], X_b.dot(theta_least_squares), color='red', label='Least Squares')
+
+plt.legend()
+plt.show()
