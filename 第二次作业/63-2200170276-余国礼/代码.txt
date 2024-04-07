@@ -1,0 +1,103 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# 读取数据
+data = pd.read_excel(r"C:\Users\余国礼\Desktop\regress_data1.xlsx")
+X = data.iloc[:, :-1].values
+y = data.iloc[:, -1].values.reshape(-1, 1)
+
+# 添加偏置项
+X = np.hstack((np.ones((X.shape[0], 1)), X))
+
+# 数据归一化
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X[:, 1:])  # 除去偏置项的归一化
+X[:, 1:] = X_scaled
+
+# 划分训练集和测试集
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+
+def compute_cost(X, y, theta, lambda_reg=0):
+    m = len(y)
+    h = X.dot(theta)
+    cost = (1 / (2 * m)) * np.sum((h - y) ** 2) + (lambda_reg / (2 * m)) * np.sum(theta[1:] ** 2)
+    return cost
+
+
+def gradient_descent(X, y, theta, learning_rate, iterations, lambda_reg=0):
+    m = len(y)
+    history = {'cost': [], 'theta': []}
+    for i in range(iterations):
+        h = X.dot(theta)
+        gradient = (1 / m) * (X.T.dot(h - y))
+        theta[0] -= learning_rate * gradient[0]
+        theta[1:] = (1 - learning_rate * (lambda_reg / m)) * theta[1:] - learning_rate * gradient[1:]
+        cost = compute_cost(X, y, theta, lambda_reg)
+        history['cost'].append(cost)
+        history['theta'].append(theta.copy())
+    return theta, history
+
+
+def plot_loss_curve(train_history, test_history):
+    plt.plot(range(len(train_history)), train_history, color='blue', label='Training Loss')
+    plt.plot(range(len(test_history)), test_history, color='red', label='Test Loss')
+    plt.title('Training and Test Loss Curves')
+    plt.xlabel('Iterations')
+    plt.ylabel('Cost')
+    plt.legend()
+    plt.show()
+
+
+def plot_scatter(X, y):
+    plt.scatter(X[:, 1], y, color='red', marker='o')
+    plt.xlabel('X')
+    plt.ylabel('y')
+    plt.title('Data Scatter Plot')
+    plt.show()
+
+
+def plot_regression_line(X, y, theta):
+    plt.scatter(X[:, 1], y, color='red', marker='o', label='Data Points')
+    plt.xlabel('X')
+    plt.ylabel('y')
+
+    # 绘制最小二乘法拟合线
+    x_values = np.linspace(np.min(X[:, 1]), np.max(X[:, 1]), 100)
+    y_values = theta[0] + theta[1] * x_values
+    plt.plot(x_values, y_values, color='blue', label='Least Squares Fit')
+
+    plt.legend()
+    plt.show()
+
+
+# 绘制数据散点图
+plot_scatter(X_train, y_train)
+
+# 设置模型参数
+theta = np.zeros((X_train.shape[1], 1))
+learning_rate = 0.01
+iterations = 1000
+lambda_reg = 0.1  # 正则化参数
+
+# 使用梯度下降法训练模型
+theta, history = gradient_descent(X_train, y_train, theta, learning_rate, iterations, lambda_reg)
+
+# 计算测试集上的损失
+test_cost = compute_cost(X_test, y_test, theta, lambda_reg)
+
+# 计算训练和测试损失
+train_cost_history = [compute_cost(X_train, y_train, theta_iter, lambda_reg) for theta_iter in history['theta']]
+test_cost_history = [test_cost for _ in range(iterations)]
+
+# 绘制训练和测试损失曲线
+plot_loss_curve(train_cost_history, test_cost_history)
+
+# 使用最小二乘法求解线性回归模型
+theta_least_squares = np.linalg.inv(X_train.T.dot(X_train)).dot(X_train.T).dot(y_train)
+
+# 绘制最小二乘法拟合曲线
+plot_regression_line(X_train, y_train, theta_least_squares)
