@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>最小归一化.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+最小归一化.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">matplotlib</span><span class="s2">.</span><span class="s1">pyplot </span><span class="s0">as </span><span class="s1">plt</span>
+<span class="s0">import </span><span class="s1">matplotlib</span>
+<span class="s0">from </span><span class="s1">matplotlib </span><span class="s0">import </span><span class="s1">rcParams</span>
+<span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+
+<span class="s1">config </span><span class="s2">= {</span>
+    <span class="s3">&quot;mathtext.fontset&quot;</span><span class="s2">:</span><span class="s3">'stix'</span><span class="s2">,</span>
+    <span class="s3">&quot;font.family&quot;</span><span class="s2">:</span><span class="s3">'serif'</span><span class="s2">,</span>
+    <span class="s3">&quot;font.serif&quot;</span><span class="s2">: [</span><span class="s3">'SimHei'</span><span class="s2">],</span>
+    <span class="s3">&quot;font.size&quot;</span><span class="s2">: </span><span class="s4">10</span><span class="s2">,</span>
+    <span class="s3">'axes.unicode_minus'</span><span class="s2">: </span><span class="s0">False</span>
+<span class="s2">}</span>
+<span class="s1">rcParams</span><span class="s2">.</span><span class="s1">update</span><span class="s2">(</span><span class="s1">config</span><span class="s2">)</span>
+
+<span class="s1">path </span><span class="s2">=</span><span class="s3">&quot;C:/Users/王子川/Documents/Tencent Files/2369277526/FileRecv/regress_data1.csv&quot;</span>
+<span class="s1">data </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">read_csv</span><span class="s2">(</span><span class="s1">path</span><span class="s2">)</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s1">data</span><span class="s2">.</span><span class="s1">head</span><span class="s2">())</span>
+<span class="s1">cols </span><span class="s2">= </span><span class="s1">data</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s4">1</span><span class="s2">]</span>
+<span class="s1">X_data </span><span class="s2">= </span><span class="s1">data</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[:,:</span><span class="s1">cols</span><span class="s2">-</span><span class="s4">1</span><span class="s2">]</span>
+<span class="s1">y_data </span><span class="s2">= </span><span class="s1">data</span><span class="s2">.</span><span class="s1">iloc</span><span class="s2">[:,</span><span class="s1">cols</span><span class="s2">-</span><span class="s4">1</span><span class="s2">:]</span>
+
+<span class="s1">data</span><span class="s2">.</span><span class="s1">plot</span><span class="s2">(</span><span class="s1">kind</span><span class="s2">=</span><span class="s3">'scatter'</span><span class="s2">, </span><span class="s1">x</span><span class="s2">=</span><span class="s3">'人口'</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s3">'收益'</span><span class="s2">, </span><span class="s1">figsize</span><span class="s2">=(</span><span class="s4">4</span><span class="s2">,</span><span class="s4">3</span><span class="s2">))</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">xlabel</span><span class="s2">(</span><span class="s3">'人口'</span><span class="s2">)</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">ylabel</span><span class="s2">(</span><span class="s3">'收益'</span><span class="s2">, </span><span class="s1">rotation</span><span class="s2">=</span><span class="s4">90</span><span class="s2">)</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">show</span><span class="s2">()</span>
+
+
+<span class="s1">X_data</span><span class="s2">=(</span><span class="s1">X_data</span><span class="s2">-</span><span class="s1">X_data</span><span class="s2">[</span><span class="s3">'人口'</span><span class="s2">].</span><span class="s1">min</span><span class="s2">())/(</span><span class="s1">X_data</span><span class="s2">[</span><span class="s3">'人口'</span><span class="s2">].</span><span class="s1">max</span><span class="s2">()-</span><span class="s1">X_data</span><span class="s2">[</span><span class="s3">'人口'</span><span class="s2">].</span><span class="s1">min</span><span class="s2">())</span>
+
+<span class="s1">X_data</span><span class="s2">.</span><span class="s1">insert</span><span class="s2">(</span><span class="s4">0</span><span class="s2">, </span><span class="s3">'Ones'</span><span class="s2">, </span><span class="s4">1</span><span class="s2">)</span>
+<span class="s1">X</span><span class="s2">=</span><span class="s1">X_data</span><span class="s2">.</span><span class="s1">values</span>
+<span class="s1">Y</span><span class="s2">=</span><span class="s1">y_data</span><span class="s2">.</span><span class="s1">values</span>
+<span class="s1">W</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([[</span><span class="s4">0.0</span><span class="s2">],[</span><span class="s4">0.0</span><span class="s2">]])</span>
+<span class="s1">W</span><span class="s2">+=(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">linalg</span><span class="s2">.</span><span class="s1">inv</span><span class="s2">(</span><span class="s1">X</span><span class="s2">.</span><span class="s1">T</span><span class="s2">@</span><span class="s1">X</span><span class="s2">))@</span><span class="s1">X</span><span class="s2">.</span><span class="s1">T</span><span class="s2">@</span><span class="s1">Y</span>
+
+<span class="s1">alpha </span><span class="s2">= </span><span class="s4">0.0001</span>
+<span class="s1">iters </span><span class="s2">= </span><span class="s4">10000</span>
+
+<span class="s1">print</span><span class="s2">(</span><span class="s1">W</span><span class="s2">)</span>
+
+<span class="s1">x </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">linspace</span><span class="s2">(</span><span class="s1">X_data</span><span class="s2">[</span><span class="s3">'人口'</span><span class="s2">].</span><span class="s1">min</span><span class="s2">(), </span><span class="s1">X_data</span><span class="s2">[</span><span class="s3">'人口'</span><span class="s2">].</span><span class="s1">max</span><span class="s2">(), </span><span class="s4">100</span><span class="s2">)</span>
+<span class="s1">f </span><span class="s2">= </span><span class="s1">W</span><span class="s2">[</span><span class="s4">0</span><span class="s2">, </span><span class="s4">0</span><span class="s2">] + (</span><span class="s1">W</span><span class="s2">[</span><span class="s4">1</span><span class="s2">, </span><span class="s4">0</span><span class="s2">] * </span><span class="s1">x</span><span class="s2">)</span>
+
+<span class="s1">fig</span><span class="s2">, </span><span class="s1">ax </span><span class="s2">= </span><span class="s1">plt</span><span class="s2">.</span><span class="s1">subplots</span><span class="s2">(</span><span class="s1">figsize</span><span class="s2">=(</span><span class="s4">6</span><span class="s2">, </span><span class="s4">4</span><span class="s2">))</span>
+<span class="s1">ax</span><span class="s2">.</span><span class="s1">plot</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">f</span><span class="s2">, </span><span class="s3">'r'</span><span class="s2">, </span><span class="s1">label</span><span class="s2">=</span><span class="s3">'预测值'</span><span class="s2">)</span>
+<span class="s1">ax</span><span class="s2">.</span><span class="s1">scatter</span><span class="s2">(</span><span class="s1">X_data</span><span class="s2">[</span><span class="s3">'人口'</span><span class="s2">], </span><span class="s1">data</span><span class="s2">[</span><span class="s3">'收益'</span><span class="s2">], </span><span class="s1">label</span><span class="s2">=</span><span class="s3">'训练数据'</span><span class="s2">)</span>
+<span class="s1">ax</span><span class="s2">.</span><span class="s1">legend</span><span class="s2">(</span><span class="s1">loc</span><span class="s2">=</span><span class="s4">2</span><span class="s2">)</span>
+<span class="s1">ax</span><span class="s2">.</span><span class="s1">set_xlabel</span><span class="s2">(</span><span class="s3">'人口'</span><span class="s2">)</span>
+<span class="s1">ax</span><span class="s2">.</span><span class="s1">set_ylabel</span><span class="s2">(</span><span class="s3">'收益'</span><span class="s2">, </span><span class="s1">rotation</span><span class="s2">=</span><span class="s4">90</span><span class="s2">)</span>
+<span class="s1">ax</span><span class="s2">.</span><span class="s1">set_title</span><span class="s2">(</span><span class="s3">'预测收益和人口规模'</span><span class="s2">)</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">show</span><span class="s2">()</span></pre>
+</body>
+</html>
