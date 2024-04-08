@@ -1,0 +1,43 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib import rcParams
+
+config = {
+    "mathtext.fontset": 'stix',
+    "font.family": 'serif',
+    "font.serif": ['SimHei'],
+    "font.size": 10,
+    'axes.unicode_minus': False     # 处理负号，即-号
+}
+rcParams.update(config)  # 设置画图参数
+
+# 数据导入
+path = 'C:/Users/练习2/regress_data1.csv'
+data = pd.read_csv(path)
+cols = data.shape[1]
+
+# 归一化数据
+x_data = data.iloc[:, :cols-1]
+y_data = data.iloc[:, cols-1:]
+x_data = (x_data - x_data.min()) / (x_data.max() - x_data.min())
+x_data.insert(0, 'Ones', 1)  # 在第一列插入一列1，用于线性回归
+
+X = x_data.values
+Y = y_data.values
+
+# 最小二乘法计算权重
+W = np.linalg.inv(X.T @ X) @ X.T @ Y
+
+# 绘图
+x = np.linspace(x_data.iloc[:,1].min(), x_data.iloc[:,1].max(), 100)
+f = W[0][0] + (W[1][0] * x)
+
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.plot(x, f, 'r', label='预测值')
+ax.scatter(x_data.iloc[:,1], y_data, label='训练数据')
+ax.legend(loc=2)
+ax.set_xlabel('人口')
+ax.set_ylabel('收益', rotation=90)
+ax.set_title('预测收益和人口规模')
+plt.show()
