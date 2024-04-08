@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 生成示例数据
+np.random.seed(0)
+X = 2 * np.random.rand(100, 1)
+y = 4 + 3 * X + np.random.randn(100, 1)
+
+# 添加一列全为1的特征向量
+X_b = np.c_[np.ones((100, 1)), X]
+
+# 梯度下降法
+eta = 0.1  # 学习率
+n_iterations = 1000
+m = 100
+theta = np.random.randn(2, 1)  # 随机初始化参数
+for iteration in range(n_iterations):
+    gradients = 2/m * X_b.T.dot(X_b.dot(theta) - y)
+    theta = theta - eta * gradients
+
+# I2范数正则项
+alpha = 0.1  # 正则化系数
+n_iterations = 1000
+m = 100
+theta = np.random.randn(2, 1)  # 随机初始化参数
+for iteration in range(n_iterations):
+    gradients = 2/m * X_b.T.dot(X_b.dot(theta) - y)
+    theta = theta - eta * gradients - alpha*theta
+
+# 最小二乘法
+theta_best = np.linalg.inv(X_b.T.dot(X_b)).dot(X_b.T).dot(y)
+
+# 数据归一化
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+X_b_scaled = np.c_[np.ones((100, 1)), X_scaled]
+
+# 梯度下降法（归一化后）
+eta = 0.1  # 学习率
+n_iterations = 1000
+m = 100
+theta_scaled = np.random.randn(2, 1)  # 随机初始化参数
+for iteration in range(n_iterations):
+    gradients = 2/m * X_b_scaled.T.dot(X_b_scaled.dot(theta_scaled) - y)
+    theta_scaled = theta_scaled - eta * gradients
+
+# 计算训练和测试损失
+def compute_cost(X, y, theta):
+    m = len(y)
+    predictions = X.dot(theta)
+    cost = np.sum((predictions - y)**2) / (2*m)
+    return cost
+
+train_cost_gd = compute_cost(X_b, y, theta)
+train_cost_reg = compute_cost(X_b, y, theta)
+train_cost_ls = compute_cost(X_b, y, theta_best)
+train_cost_gd_scaled = compute_cost(X_b_scaled, y, theta_scaled)
+
+# 画出训练和测试损失曲线
+plt.figure(figsize=(10, 6))
+plt.plot(train_cost_gd, label='Gradient Descent')
+plt.plot(train_cost_reg, label='Regularized Gradient Descent')
+plt.plot(train_cost_ls, label='Least Squares')
+plt.plot(train_cost_gd_scaled, label='Scaled Gradient Descent')
+plt.xlabel('Iterations')
+plt.ylabel('Cost')
+plt.legend()
+plt.show()
