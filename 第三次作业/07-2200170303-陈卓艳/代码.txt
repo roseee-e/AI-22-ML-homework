@@ -1,0 +1,144 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
+import pandas as pd
+import matplotlib
+from sklearn.metrics import precision_recall_curve, roc_curve, auc, roc_auc_score, precision_score, recall_score, \
+    f1_score
+from sklearn.model_selection import KFold
+
+config = {
+    "mathtext.fontset": 'stix',
+    "font.family": 'serif',
+    "font.serif": ['SimHei'],
+    "font.size": 10,
+    'axes.unicode_minus': False
+}
+rcParams.update(config)
+
+path = r'C:\pycharm\python_learn\ex2data1.txt'
+data = pd.read_csv(path,header=None,names=['feature1','feature2','tab'])
+tab0=data[data['tab']==0]
+tab1=data[data['tab']==1]
+x_data=data.iloc[:,:2]
+y_data=data.iloc[:,2]
+#print(data)
+
+#绘制散点图
+fig, ax = plt.subplots(figsize=(10,5))
+ax.scatter(tab0['feature1'],tab0['feature2'],s=30,c='b',marker='x',label='tab 0')
+ax.scatter(tab1['feature1'],tab1['feature2'],s=30,c='r',marker='o',label='tab 1')
+ax.legend()
+ax.set_xlabel('Feature 1')
+ax.set_ylabel('Feature 2')
+ax.set_title('数据分布图')
+plt.show()
+
+#数据归一化处理
+def normalization(x):
+    x_min=np.min(x,axis=0)
+    x_max=np.max(x,axis=0)
+    x_norm=(x-x_min)/(x_max-x_min)
+    return x_norm,x_min,x_max
+
+x_data1,x_min,x_max=normalization(x_data.values)
+x_data1= np.insert(x_data1, 0, 1, axis=1)
+x=x_data1
+y=y_data.values.reshape(-1,1)
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+#初始化模型参数
+feature_dim=x.shape[1]
+w=np.zeros((feature_dim,1))
+
+def computeCost(x,y,w):
+    p=sigmoid(np.dot(x,w))
+    loss=np.sum(-y*np.log(p)-(1-y)*np.log(1-p))/x.shape[0]
+    return loss,p
+
+def gradientDecent(w,x,y,alpha):
+    error=sigmoid(np.dot(x,w))-y
+    grad=np.dot(x.T,error)/x.shape[0]
+    w=w-alpha*grad
+    return w
+
+def logisticRegression(x, y, alpha, iters):
+    loss_his=[]
+    w_his=[]
+    feature_dim=x.shape[1]
+    w=np.zeros((feature_dim,1))
+    for i in range (iters):
+        loss,p=computeCost(x,y,w)
+        loss_his.append(loss)
+        w_his.append(w.copy())
+        w=gradientDecent(w,x,y,alpha)
+    return loss_his,w,w_his
+
+def testmodel(x_test,y_test,w_his):
+    testloss_his=[]
+    for w in w_his:
+        test_loss,p=computeCost(x_test,y_test,w)
+        testloss_his.append(test_loss)
+    return  testloss_his,p
+
+def model_assess(x_test,y_test,w):
+    y_pred=sigmoid(np.dot(x_test,w))
+    y_pred_label=(y_pred>=0.5).astype(int)
+    precision=precision_score(y_test,y_pred_label)
+    recall=recall_score(y_test,y_pred_label)
+    f1=f1_score(y_test,y_pred_label)
+    return precision,recall,f1
+
+alpha=0.001
+iters=1000000
+trainloss_his=[]
+testloss_his=[]
+y_true=[]
+y_pred=[]
+precision=0
+recall=0
+f1=0
+
+#五折交叉验证法
+kf = KFold(n_splits=5, shuffle=True, random_state=None)
+
+for train_index, test_index in kf.split(x):
+    x_train, x_test = x[train_index], x[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+    loss_his,W,W_his = logisticRegression(x_train, y_train, alpha, iters)
+    testloss, P = testmodel(x_test, y_test, W_his)
+    trainloss_his.append(loss_his)
+    testloss_his.append(testloss)
+    y_true.extend(y_test)
+    y_pred.extend(P)
+    precision,recall,f1=model_assess(x_test,y_test,W)
+
+trainloss_average = np.mean(trainloss_his, axis=0)
+testloss_average = np.mean(testloss_his, axis=0)
+
+#绘制损失曲线
+fig,ax=plt.subplots(figsize=(8,6))
+ax.plot(np.arange(iters),trainloss_average,'r',label='Training loss')
+ax.plot(np.arange(iters),testloss_average,'b',label='Test loss')
+ax.set_title('训练和测试的损失曲线')
+ax.set_xlabel('迭代次数')
+ax.set_ylabel('损失')
+plt.legend()
+plt.show()
+
+fpr, tpr, _ = roc_curve(y_true, y_pred)
+roc_auc = auc(fpr, tpr)
+plt.figure(figsize=(8, 6))
+plt.plot(fpr,tpr,'r',label=f'AUC = {roc_auc:.2f}')
+plt.plot([0, 1], [0, 1],'b--')
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.title('ROC Curve')
+plt.legend(loc='lower right')
+plt.show()
+
+print("precision:",precision)
+print("recall",recall)
+print("f1:",f1)
