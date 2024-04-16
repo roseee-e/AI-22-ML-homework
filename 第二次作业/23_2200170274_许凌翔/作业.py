@@ -32,7 +32,7 @@ def compute_cost(X, Y, W):
 def gradient_descent(X, Y, W, alpha, iters, lambda_=0):
     m = len(Y)
     cost_history = []
-    
+
     for i in range(iters):
         Y_hat = np.dot(X, W)  # 计算预测值
         loss = Y_hat - Y  # 计算误差
@@ -41,7 +41,7 @@ def gradient_descent(X, Y, W, alpha, iters, lambda_=0):
         W = W - alpha * gradient  # 更新权重
         cost = compute_cost(X, Y, W)  # 计算当前损失
         cost_history.append(cost)  # 保存损失历史
-        
+
     return W, cost_history
 
 # 线性回归模型
@@ -49,7 +49,7 @@ def linear_regression(X, Y, alpha=0.01, iters=50000, lambda_=0):
     X_b = np.c_[np.ones((X.shape[0], 1)), X]  # 在X数据前加上一列1作为偏置项
     W = np.zeros((X_b.shape[1], 1))  # 权重初始化为0
     W, cost_history = gradient_descent(X_b, Y, W, alpha, iters, lambda_)  # 应用梯度下降
-    
+
     return W, cost_history
 # 最小二乘法拟合
 def least_squares(X, Y):
@@ -67,7 +67,7 @@ def linear_regression(X, Y, alpha=0.01, iters=50000, lambda_=0):
     X_b = np.c_[np.ones((X.shape[0], 1)), X]  # 在X数据前加上一列1作为偏置项
     W = np.zeros((X_b.shape[1], 1))  # 权重初始化为0
     cost_history = []  # 保存损失历史
-    
+
     for i in range(iters):
         Y_hat = np.dot(X_b, W)  # 计算预测值
         loss = Y_hat - Y  # 计算误差
@@ -75,7 +75,7 @@ def linear_regression(X, Y, alpha=0.01, iters=50000, lambda_=0):
         W = W - alpha * gradient  # 更新权重
         cost = compute_cost(X_b, Y, W)  # 计算当前损失
         cost_history.append(cost)  # 保存损失历史
-        
+
     return W, cost_history
 # 绘制并保存所有图像
 def plot_all_graphs(train_loss, test_loss, X_train, Y_train, Y_train_pred, X_test, Y_test, Y_test_pred):
@@ -128,19 +128,19 @@ def plot_all_graphs(train_loss, test_loss, X_train, Y_train, Y_train_pred, X_tes
 # 主程序
 def main():
     set_matplotlib_config()
-    
+
     # 读取数据，确保已经将文件路径改为正确的路径
-    data_path = r"C:\Users\小黑\Desktop\机器学习\第二次作业\26_2200170246_莫永清\regress_data1.csv"
+    data_path = r"D:\Python\data\regress_data1.txt"
     data = pd.read_csv(data_path)
     X = data.iloc[:, :-1].values
     Y = data.iloc[:, -1].values.reshape(-1, 1)
 
     # 数据归一化处理
     X_norm, scaler = normalize_data(X)
-    
+
     # 分割数据集
     X_train, X_test, Y_train, Y_test = train_test_split(X_norm, Y, test_size=0.2, random_state=42)
-    
+
     # 训练模型并计算训练和测试损失
     W, train_cost_history = linear_regression(X_train, Y_train, alpha=0.01, iters=50000, lambda_=1)
     X_test_b = np.c_[np.ones((X_test.shape[0], 1)), X_test]  # 测试数据加上偏置项
@@ -160,19 +160,19 @@ if __name__ == "__main__":
 # 主程序
 def main():
     set_matplotlib_config()
-    
+
     # 读取数据，确保已经将文件路径改为正确的路径
-    data_path = r"C:\Users\小黑\Desktop\机器学习\第二次作业\26_2200170246_莫永清\regress_data1.csv"
+    data_path = r"D:\Python\data\data1.txt"
     data = pd.read_csv(data_path)
     X = data.iloc[:, :-1].values
     Y = data.iloc[:, -1].values.reshape(-1, 1)
 
     # 数据归一化处理
     X_norm, scaler = normalize_data(X)
-    
+
     # 分割数据集
     X_train, X_test, Y_train, Y_test = train_test_split(X_norm, Y, test_size=0.2, random_state=42)
-    
+
     # 训练模型并计算训练和测试损失
     W, train_cost_history = linear_regression(X_train, Y_train, alpha=0.01, iters=50000, lambda_=1)
     X_test_b = np.c_[np.ones((X_test.shape[0], 1)), X_test]  # 测试数据加上偏置项
