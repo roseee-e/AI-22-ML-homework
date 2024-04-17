@@ -83,7 +83,7 @@ def test(X,Y,W,iters):
 
 #全局变量
 alpha =0.1
-iters = 10000
+iters = 1000
 loss_his_test=[]
 loss_his_train=[]
 W_aver=[]
@@ -132,11 +132,9 @@ def predict(X, W):
 
 #求预测值
 Y_pre,Y_hat=predict(X_normalized,W_aver1)
-Y_hat=Y_hat+0
-Y_hat=Y_hat.T
-Y_true=Y.T
+
 from itertools import chain
-Y_true = list(chain.from_iterable(Y_true))
+Y_true = list(chain.from_iterable(Y))
 Y_hat = list(chain.from_iterable(Y_hat))
 
 #求presicion和recall、F1值
@@ -147,9 +145,8 @@ print("recall值为{}".format(recall))
 F1=f1_score(Y_true,Y_hat)
 print("f1_score值为{}".format(F1))
 
-
 #画ROC曲线和求AUC
-fpr,tpr,thre=roc_curve(Y_true,Y_hat,)
+fpr,tpr,thre=roc_curve(Y,Y_pre)
 AUC=auc(fpr,tpr)
 plt.figure(figsize=(5, 5))  
 plt.title('ROC Curve',fontsize=16)  
