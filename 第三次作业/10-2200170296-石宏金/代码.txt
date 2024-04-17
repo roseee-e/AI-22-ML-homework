@@ -1,0 +1,69 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_curve, auc
+
+# 读取数据
+data = pd.read_csv("C:\\Users\\shj\\Desktop\\ex2data1.txt", header=None)
+X = data.iloc[:, :-1].values
+y = data.iloc[:, -1].values
+
+# 数据划分
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 定义逻辑回归模型
+log_reg = LogisticRegression()
+
+# 模型训练
+log_reg.fit(X_train, y_train)
+
+# 使用交叉验证来获取损失值
+cv_train_losses = -cross_val_score(log_reg, X_train, y_train, cv=5, scoring='neg_log_loss')
+cv_test_losses = -cross_val_score(log_reg, X_test, y_test, cv=5, scoring='neg_log_loss')
+
+# 绘制损失曲线
+plt.figure(figsize=(8, 6))
+plt.plot(cv_train_losses, label='Training Loss')
+plt.plot(cv_test_losses, label='Validation Loss')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.title('Training and Validation Loss')
+plt.legend()
+plt.show()
+
+# 模型测试
+y_pred = log_reg.predict(X_test)
+
+# 模型评价
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+
+# 计算AUC和绘制ROC曲线
+y_train_scores = log_reg.decision_function(X_train)
+fpr_train, tpr_train, thresholds_train = roc_curve(y_train, y_train_scores)
+roc_auc_train = auc(fpr_train, tpr_train)
+
+y_test_scores = log_reg.decision_function(X_test)
+fpr_test, tpr_test, thresholds_test = roc_curve(y_test, y_test_scores)
+roc_auc_test = auc(fpr_test, tpr_test)
+
+plt.figure(figsize=(8, 6))
+plt.plot(fpr_train, tpr_train, label='Train ROC curve (area = %0.2f)' % roc_auc_train)
+plt.plot(fpr_test, tpr_test, label='Test ROC curve (area = %0.2f)' % roc_auc_test)
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC)')
+plt.legend(loc="lower right")
+plt.show()
+
+print("Precision: {:.2f}".format(precision))
+print("Recall: {:.2f}".format(recall))
+print("F1 Score: {:.2f}".format(f1))
+print("Train AUC: {:.2f}".format(roc_auc_train))
+print("Test AUC: {:.2f}".format(roc_auc_test))
