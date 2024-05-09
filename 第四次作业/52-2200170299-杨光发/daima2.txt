@@ -1,0 +1,41 @@
+
+import pandas as pd
+from collections import defaultdict
+
+
+# 训练数据集
+data = {
+    'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain', 'Rain', 'Overcast', 'Sunny', 'Sunny', 'Rain', 'Sunny', 'Overcast', 'Overcast', 'Rain'],
+    'Temperature': ['Hot', 'Hot', 'Hot', 'Mild', 'Cool', 'Cool', 'Cool', 'Mild', 'Cool', 'Mild', 'Mild', 'Mild', 'Hot', 'Mild'],
+    'Humidity': ['High', 'High', 'High', 'High', 'Normal', 'Normal', 'Normal', 'High', 'Normal', 'Normal', 'Normal', 'High', 'Normal', 'High'],
+    'Wind': ['Weak', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak', 'Strong'],
+    'PlayTennis': ['No', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes', 'No', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'No']
+}
+
+df = pd.DataFrame(data)
+
+# 计算每个类别的先验概率 P(y)
+prior_prob = df['PlayTennis'].value_counts(normalize=True).to_dict()
+
+# 初始化条件概率字典
+conditional_prob = defaultdict(dict)
+
+# 计算条件概率 P(X|y)
+for feature in ['Outlook', 'Temperature', 'Humidity', 'Wind']:
+    for class_value in df['PlayTennis'].unique():
+        conditional_prob[feature][class_value] = df[df['PlayTennis'] == class_value][feature].value_counts(normalize=True).to_dict()
+
+# 测试数据集
+test_sample = {'Outlook': 'Sunny', 'Temperature': 'Cool', 'Humidity': 'High', 'Wind': 'Strong'}
+
+# 计算后验概率 P(y|X)
+posterior_prob = {}
+for class_value, prior in prior_prob.items():
+    likelihood = 1
+    for feature, value in test_sample.items():
+        likelihood *= conditional_prob[feature][class_value].get(value, 0)  # 使用拉普拉斯平滑
+    posterior_prob[class_value] = prior * likelihood
+
+# 预测结果
+predicted_class = max(posterior_prob, key=posterior_prob.get)
+print("预测结果:", predicted_class)
