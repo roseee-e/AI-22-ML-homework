@@ -1,0 +1,51 @@
+from sklearn.naive_bayes import GaussianNB
+import numpy as np
+
+# 训练数据集
+X_train = np.array([
+    ['Sunny', 'Hot', 'High', 'Weak'],
+    ['Sunny', 'Hot', 'High', 'Strong'],
+    ['Overcast', 'Hot', 'High', 'Weak'],
+    ['Rain', 'Mild', 'High', 'Weak'],
+    ['Rain', 'Cool', 'Normal', 'Weak'],
+    ['Rain', 'Cool', 'Normal', 'Strong'],
+    ['Overcast', 'Cool', 'Normal', 'Strong'],
+    ['Sunny', 'Mild', 'High', 'Weak'],
+    ['Sunny', 'Cool', 'Normal', 'Weak'],
+    ['Rain', 'Mild', 'Normal', 'Weak'],
+    ['Sunny', 'Mild', 'Normal', 'Strong'],
+    ['Overcast', 'Mild', 'High', 'Strong'],
+    ['Overcast', 'Hot', 'Normal', 'Weak'],
+    ['Rain', 'Mild', 'High', 'Strong']
+])
+y_train = np.array(['No', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes', 'No', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'No'])
+
+# 创建朴素贝叶斯分类器对象
+nb_classifier = GaussianNB()
+
+# 将训练数据集中的类别属性编码为数字
+X_train_encoded = []
+encoding_dicts = []
+for i in range(X_train.shape[1]):
+    unique_values = np.unique(X_train[:, i])
+    encoding = {val: j for j, val in enumerate(unique_values)}
+    encoding_dicts.append(encoding)
+    X_train_encoded.append([encoding[val] for val in X_train[:, i]])
+X_train_encoded = np.array(X_train_encoded).T
+
+# 在训练数据上训练分类器
+nb_classifier.fit(X_train_encoded, y_train)
+
+# 测试数据集
+new_sample = np.array([['Sunny', 'Cool', 'High', 'Strong']])
+
+# 将测试数据集中的类别属性编码为数字
+new_sample_encoded = []
+for i in range(new_sample.shape[1]):
+    encoding = encoding_dicts[i]
+    new_sample_encoded.append([encoding.get(val, -1) for val in new_sample[:, i]])
+new_sample_encoded = np.array(new_sample_encoded).T
+
+# 预测结果
+prediction = nb_classifier.predict(new_sample_encoded)
+print("预测结果:", prediction[0])
