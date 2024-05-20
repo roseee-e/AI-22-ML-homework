@@ -1,0 +1,52 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+def ID3(data, target, attributes):
+    if len(attributes) == 0 or data.shape[0] <= 1:
+        return None
+    entropy = calculate_entropy(data[target])
+    best_attribute = None
+    max_info_gain = 0
+    for attribute in attributes:
+        info_gain = calculate_info_gain(data, target, attribute)
+        if info_gain > max_info_gain:
+            max_info_gain = info_gain
+            best_attribute = attribute
+    if max_info_gain > 0:
+        tree = {best_attribute: {}}
+        values = list(set(data[best_attribute]))
+        for value in values:
+            sub_data = data[data[best_attribute] == value]
+            sub_attributes = attributes.copy()
+            sub_attributes.remove(best_attribute)
+            tree[best_attribute][value] = ID3(sub_data, target, sub_attributes)
+    else:
+        tree = {target: {'Yes': data[target].mode()[0], 'No': data[target].mode()[0]}
+                }
+    return tree
+
+def draw_tree(tree, target, attributes):
+    plt.figure(figsize=(15, 7))
+    plt.title(f"ID3 Decision Tree")
+    plt.xlabel("Attributes", fontsize=12)
+    plt.ylabel("Target", fontsize=12)
+    plt.barh(attributes, [tree[attr] for attr in attributes], color="blue")
+    plt.yticks(np.arange(len(attributes)), attributes)
+    plt.xticks([0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14], [0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14])
+    plt.show()
+
+# 数据集
+data = pd.DataFrame({
+    "年龄": ["青年", "青年", "青年", "青年", "中年", "中年", "中年", "中年", "老年", "老年", "老年", "老年", "老年", "老年"],
+    "有工作": ["否", "否", "是", "是", "否", "否", "是", "是", "否", "否", "是", "是", "否", "否", "是", "是", "否", "否", "是", "是"],
+    "有房子": ["否", "否", "否", "是", "否", "否", "否", "是", "否", "否", "否", "是", "否", "否", "否", "是", "否", "否", "否", "是"],
+    "信用": ["一般", "一般", "好", "好", "一般", "一般", "好", "好", "非常好", "非常好", "一般", "一般", "非常好", "非常好", "一般", "一般", "非常好", "非常好", "一般", "一般"],
+    "类别": ["否", "否", "是", "是", "否", "否", "是", "是", "否", "否", "是", "是", "否", "否", "是", "是", "否", "否", "是", "是"]
+})
+
+# 创建决策树
+tree = ID3(data, "类别", ["年龄", "有工作", "有房子", "信用"])
+
+# 绘制决策树
+draw_tree(tree, "类别", ["年龄", "有工作", "有房子", "信用"])
