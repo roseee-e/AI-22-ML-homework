@@ -1,0 +1,98 @@
+import math
+
+def calc_entropy(data):
+    """计算样本集合的熵"""
+    n = len(data)
+    counts = {}
+    for d in data:
+        label = d[-1]
+        if label not in counts:
+            counts[label] = 0
+        counts[label] += 1
+    entropy = 0.0
+    for label, count in counts.items():
+        p = count / n
+        entropy -= p * math.log2(p)
+    return entropy
+
+def split_data(data, axis, value):
+    """划分数据集"""
+    sub_data = []
+    for d in data:
+        if d[axis] == value:
+            sub_d = d[:axis] + d[axis+1:]
+            sub_data.append(sub_d)
+    return sub_data
+
+def choose_best_feature(data):
+    """选择最佳的划分属性"""
+    n_features = len(data[0]) - 1
+    base_entropy = calc_entropy(data)
+    best_feature = -1
+    best_info_gain = 0.0
+    for i in range(n_features):
+        values = set([d[i] for d in data])
+        new_entropy = 0.0
+        for v in values:
+            sub_data = split_data(data, i, v)
+            p = len(sub_data) / len(data)
+            new_entropy += p * calc_entropy(sub_data)
+        info_gain = base_entropy - new_entropy
+        if info_gain > best_info_gain:
+            best_info_gain = info_gain
+            best_feature = i
+    return best_feature
+
+def majority_class(class_list):
+    """返回出现次数最多的类别"""
+    counts = {}
+    for c in class_list:
+        if c not in counts:
+            counts[c] = 0
+        counts[c] += 1
+    sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    return sorted_counts[0][0]
+
+def create_tree(data, labels):
+    """构建决策树"""
+    class_list = [d[-1] for d in data]
+    # 如果所有样本属于同一类别，则返回该类别
+    if class_list.count(class_list[0]) == len(class_list):
+        return class_list[0]
+    # 如果所有属性都已经被使用，则返回出现次数最多的类别
+    if len(data[0]) == 1:
+        return majority_class(class_list)
+    # 选择最佳的划分属性
+    best_feature_index = choose_best_feature(data)
+    best_feature_label = labels[best_feature_index]
+    tree = {best_feature_label: {}}
+    del(labels[best_feature_index])
+    values = set([d[best_feature_index] for d in data])
+    for v in values:
+        sub_labels = labels[:]
+        sub_data = split_data(data, best_feature_index, v)
+        sub_tree = create_tree(sub_data, sub_labels)
+        tree[best_feature_label][v] = sub_tree
+    return tree
+
+# 数据集
+data = [
+    ['青年', '否', '否', '一般', '否'],
+    ['青年', '否', '否', '好', '否'],
+    ['青年', '是', '否', '好', '是'],
+    ['青年', '是', '是', '一般', '是'],
+    ['青年', '否', '否', '一般', '否'],
+    ['中年', '否', '否', '一般', '否'],
+    ['中年', '否', '否', '好', '否'],
+    ['中年', '是', '是', '好', '是'],
+    ['中年', '否', '是', '非常好', '是'],
+    ['中年', '否', '是', '非常好', '是'],
+    ['老年', '否', '是', '非常好', '是'],
+    ['老年', '否', '是', '好', '是'],
+    ['老年', '是', '否', '好', '是'],
+    ['老年', '是', '否', '非常好', '是'],
+    ['老年', '否', '否', '一般', '否'],
+]
+labels = ['年龄', '有工作', '有房子', '信用']
+tree = create_tree(data, labels)
+print(tree)
