@@ -1,111 +1,61 @@
+import cv2
 import numpy as np
-import pandas as pd
-from math import log
-from sklearn.metrics import accuracy_score
-from collections import Counter
+import matplotlib.pyplot as plt
 
-path = 'D:/Document/data.txt'
-data = pd.read_csv(path)
-train_data = data.drop(['编号'], axis=1)
+# 读取图像
+image_path = r'C:\Users\Eternity\Desktop\dog.png'
+image = cv2.imread(image_path)
 
-def calc_entropy(y_label):
-    num_samples = y_label.shape[0]
-    cnt = Counter(y_label)
-    ent = -sum([(p / num_samples) * log(p / num_samples, 2) for p in cnt.values()])
-    return ent
+# 将图像从BGR转换为RGB
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-def calc_conditional_entropy(attri_data, y_label):
-    num_samples = y_label.shape[0]
-    attr_cnt = Counter(attri_data)
-    cond_entropy = 0
-    for key in attr_cnt:
-        attri_key_label = y_label[attri_data == key]
-        cond_entropy += len(attri_key_label) / num_samples * calc_entropy(attri_key_label)
-    return cond_entropy
+# 获取图像尺寸
+h, w, c = image.shape
 
-class Node:
-    def __init__(self, root=True, label=None, attri_name=None):
-        self.root = root
-        self.label = label
-        self.attri_name = attri_name
-        self.tree = {}
-        self.result = {
-            'label': self.label,
-            'attri_name': self.attri_name,
-            'tree': self.tree,
-            'root': self.root
-        }
+# 压缩图像为二维数组
+pixels = image.reshape(-1, 3)
 
-    def add_node(self, val, node):
-        self.tree[val] = node
+# FCM算法类
+class FCM:
+    def __init__(self, n_clusters, m=2, max_iter=300, tol=1e-4, random_state=None):
+        self.n_clusters = n_clusters
+        self.m = m
+        self.max_iter = max_iter
+        self.tol = tol
+        if random_state:
+            np.random.seed(random_state)
 
-    def __repr__(self):
-        return '{}'.format(self.result)
+    def fit(self, X):
+        self.U = np.random.dirichlet(np.ones(self.n_clusters), size=X.shape[0])
+        for i in range(self.max_iter):
+            self.centers = self.update_centers(X)
+            U_old = self.U.copy()
+            self.U = self.update_membership(X)
+            if np.linalg.norm(self.U - U_old) < self.tol:
+                break
+        return self
 
-class ID3_DTree:
-    def __init__(self, epsilon=0.1):
-        self.epsilon = epsilon
-        self.tree =    def determine_opt_attr(self, train_data):
-        info_gain = 0
-        y_label = train_data.iloc[:, -1]
-        attri_num = train_data.shape[1] - 1
-        info_gains =        for i in range(attri_num):
-            attr_data = train_data.iloc[:, i]
-            ent = calc_entropy(y_label)
-            cond_ent = calc_conditional_entropy(attr_data, y_label)
-            info_gain_tmp = ent - cond_ent
-            info_gains[train_data.columns[i]] = info_gain_tmp
-            if info_gain_tmp > info_gain:
-                info_gain = info_gain_tmp
-                opt_attr = train_data.columns[i]
-        print("各属性的信息增益：", info_gains)
-        return opt_attr, info_gain
+    def update_centers(self, X):
+        um = self.U ** self.m
+        return (um.T @ X) / um.sum(axis=0)[:, None]
 
-    def build_tree(self, train_data):
-        y_label = train_data.iloc[:, -1]
-        feature_space = train_data.columns[:-1]
+    def update_membership(self, X):
+        temp = np.linalg.norm(X[:, None] - self.centers, axis=2) ** (2 / (self.m - 1))
+        return 1 / temp / np.sum(1 / temp, axis=1, keepdims=True)
 
-        if len(y_label.value_counts()) == 1:
-            return Node(root=True, label=y_label.iloc[0])
+# 使用FCM算法进行聚类
+fcm = FCM(n_clusters=5, random_state=0).fit(pixels)
+labels = np.argmax(fcm.U, axis=1)
+segmented_image = labels.reshape(h, w)
 
-        if len(feature_space) == 0:
-            return Node(root=True, label=y_label.value_counts().sort_values(ascending=False).index[0])
+# 显示原图像和分割后的图像
+fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+ax[0].imshow(image)
+ax[0].set_title('Original Image')
+ax[0].axis('off')
 
-        opt_attr_name, max_info_gain = self.determine_opt_attr(train_data)
+ax[1].imshow(segmented_image, cmap='viridis')
+ax[1].set_title('Segmented Image')
+ax[1].axis('off')
 
-        if max_info_gain < self.epsilon:
-            return Node(root=True, label=y_label.value_counts().sort_values(ascending=False).index[0])
-
-        node_tree = Node(root=False, attri_name=opt_attr_name)
-        feature_list = train_data[opt_attr_name].value_counts().index
-
-        for f in feature_list:
-            sub_train_df = train_data.loc[train_data[opt_attr_name] == f].drop([opt_attr_name], axis=1)
-            sub_tree = self.build_tree(sub_train_df)
-            node_tree.add_node(f, sub_tree)
-        return node_tree
-
-    def fit(self, train_data):
-        self.tree = self.build_tree(train_data)
-
-    def predict(self, test_data):
-        pred = []
-        for _, row in test_data.iterrows():
-            node = self.tree
-            while node.attri_name is not None:
-                attri_val = row[node.attri_name]
-                if attri_val in node.tree:
-                    node = node.tree[attri_val]
-                else:
-                    break
-            pred.append(node.label)
-        return pred
-
-# 拟合决策树
-dt = ID3_DTree()
-dt.fit(train_data)
-
-# 预测结果
-test_data = train_data.iloc[1:12, :-1]
-y_pred = dt.predict(test_data)
-print(y_pred)
+plt.show()
