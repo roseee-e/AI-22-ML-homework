@@ -1,0 +1,79 @@
+import cv2
+import numpy as np
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+def fcm_segmentation(image_array, K, m, eps, max_its):
+    num = image_array.shape[0]  # 获取像素数目
+    d = image_array.shape[1]  # 获取像素维度
+
+    # 初始化隶属度矩阵u
+    u = np.random.random((num, K))
+    u = u / np.sum(u, axis=1)[:, np.newaxis]
+
+    it = 0
+    while it < max_its:
+        it += 1
+
+        um = u ** m
+
+        # 计算聚类中心
+        center = np.dot(um.T, image_array) / np.sum(um.T, axis=1)[:, np.newaxis]
+
+        # 计算距离矩阵
+        distance = np.linalg.norm(image_array[:, np.newaxis] - center, axis=-1) ** 2
+
+        # 更新隶属度矩阵u
+        new_u = 1. / np.sum((distance[:, :, np.newaxis] / distance[:, np.newaxis, :]) ** (2 / (m - 1)), axis=-1)
+
+        # 检查收敛条件
+        if np.sum(np.abs(new_u - u)) < eps:
+            break
+
+        u = new_u
+
+    # 返回每个像素最大隶属度对应的类别索引
+    return np.argmax(u, axis=1)
+
+# 图像路径
+image_path = r"C:\Users\shj\Desktop\dog.png"
+
+# 使用OpenCV加载图像
+image = cv2.imread(image_path)
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # 转换颜色空间为RGB（因为OpenCV加载的图像是BGR格式）
+
+# 将图像数据转换为二维数组
+image_array = image.reshape(-1, 3)  # 使用reshape简化
+
+# 定义KMeans模型，这里设定聚类数为K
+K = 5  # 可根据需要调整聚类数
+kmeans = KMeans(n_clusters=K, random_state=0)
+
+# 对图像数据进行聚类
+labels_kmeans = kmeans.fit_predict(image_array)
+
+# 使用FCM算法进行聚类
+m = 2  # FCM的加权指标
+eps = 0.01  # FCM的差别阈值
+max_its = 100  # FCM的最大迭代次数
+labels_fcm = fcm_segmentation(image_array, K, m, eps, max_its)
+
+# 重新构建图像（将每个像素的颜色值替换为其所属聚类中心的颜色值）
+segmented_image_kmeans = labels_kmeans.reshape(image.shape[:2])
+segmented_image_fcm = labels_fcm.reshape(image.shape[:2])
+
+# 显示分割后的图像
+plt.figure(figsize=(12, 6))
+
+plt.subplot(1, 2, 1)
+plt.imshow(segmented_image_kmeans, cmap='viridis')  # 使用viridis colormap显示聚类后的图像
+plt.axis('off')
+plt.title(f'Segmented Image (K-means, K={K})')
+
+plt.subplot(1, 2, 2)
+plt.imshow(segmented_image_fcm, cmap='viridis')  # 使用viridis colormap显示聚类后的图像
+plt.axis('off')
+plt.title(f'Segmented Image (FCM, K={K})')
+
+plt.tight_layout()
+plt.show()
