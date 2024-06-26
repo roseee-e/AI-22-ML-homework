@@ -1,0 +1,54 @@
+from sklearn.cluster import KMeans
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+
+def kmeans_color_quantization(image, n_colors):
+    # 将图像数据转换为二维数组，形状为(num_pixels, 3)，其中3是RGB通道  
+    pixels = image.reshape(-1, 3)
+
+    # 使用KMeans进行聚类  
+    kmeans = KMeans(n_clusters=n_colors)
+    kmeans.fit(pixels)
+
+    # 获取聚类中心和标签  
+    labels = kmeans.labels_
+    centers = kmeans.cluster_centers_
+
+    # 使用聚类中心替换原始像素值  
+    segmented_image = centers[labels].astype(np.uint8)
+
+    # 重塑为原始图像的形状  
+    segmented_image = segmented_image.reshape(image.shape)
+
+    return segmented_image
+
+
+
+# 打开图像文件
+image_path = Image.open('实验1.jpg')
+image = np.array(image_path)
+
+# 确保图像是RGB格式
+if image.shape[2] == 4:  # 如果包含alpha通道，则删除
+    image = image[:, :, :3]
+
+
+# 使用K-means进行颜色量化
+n_colors = 4  # 例如，将图像分割为8种颜色
+segmented_image = kmeans_color_quantization(np.float32(image), n_colors)
+
+# 显示原始图像和分割后的图像
+plt.figure(figsize=(10, 5))
+#1
+plt.subplot(121)
+plt.title('Original Image')
+plt.imshow(image)
+plt.axis('off')
+#2
+plt.subplot(122)
+plt.title('K-means Color Segmentation')
+plt.imshow(segmented_image)
+plt.axis('off')
+
+plt.show()
